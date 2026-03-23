@@ -19,11 +19,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -38,24 +34,26 @@ class DatabaseHelper {
 
   Future<int> createQuestion(GameQuestion question) async {
     final db = await database;
-    
+
     final data = {
       'question': question.question,
-      'responses': jsonEncode(question.responses.map((r) => r.toJson()).toList()),
+      'responses': jsonEncode(
+        question.responses.map((r) => r.toJson()).toList(),
+      ),
     };
-    
+
     return await db.insert('questions', data);
   }
 
   Future<List<GameQuestion>> getAllQuestions() async {
     final db = await database;
     final result = await db.query('questions', orderBy: 'id ASC');
-    
+
     return result.map((json) {
       final responses = (jsonDecode(json['responses'] as String) as List)
           .map((r) => GameResponse.fromJson(r as Map<String, dynamic>))
           .toList();
-      
+
       return GameQuestion(
         question: json['question'] as String,
         responses: responses,
@@ -66,12 +64,12 @@ class DatabaseHelper {
   Future<int> deleteQuestion(int index) async {
     final db = await database;
     final questions = await db.query('questions', orderBy: 'id ASC');
-    
+
     if (index >= 0 && index < questions.length) {
       final id = questions[index]['id'] as int;
       return await db.delete('questions', where: 'id = ?', whereArgs: [id]);
     }
-    
+
     return 0;
   }
 
